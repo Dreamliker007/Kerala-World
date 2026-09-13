@@ -8,7 +8,8 @@ for(const selectId of ["home-district","travel-district"])for(const d of distric
 $("home-district").value=$("travel-district").value="kottayam";
 let timer;function notify(message){$("notice").textContent=message;$("notice").style.display="block";clearTimeout(timer);timer=setTimeout(()=>$("notice").style.display="none",5000)}
 async function safe(fn){try{return await fn()}catch(e){console.error(e);notify(e.message||"Something went wrong")}}
-const url=import.meta.env.VITE_SUPABASE_URL,key=import.meta.env.VITE_SUPABASE_ANON_KEY;
+const url=import.meta.env.VITE_SUPABASE_URL;
+const key=import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY||import.meta.env.VITE_SUPABASE_ANON_KEY;
 const supabase=url&&key?createClient(url,key):null;
 let user,profile,activeDM=null,profiles=new Map(),requests=[],worldStarted=false;
 
