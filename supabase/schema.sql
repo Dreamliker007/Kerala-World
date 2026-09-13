@@ -1,10 +1,13 @@
 create extension if not exists pgcrypto;
-create table if not exists public.profiles(id uuid primary key references auth.users(id) on delete cascade,username text not null check(username ~ '^[a-z0-9_]{3,20}$'),name text not null check(char_length(trim(name)) between 2 and 24),home_state text not null,home_district text not null,gender text not null check(gender in('male','female','other')),created_at timestamptz not null default now());
+create table if not exists public.profiles(id uuid primary key references auth.users(id) on delete cascade,username text not null check(username ~ '^[a-z0-9_]{3,20}$'),name text not null check(char_length(trim(name)) between 2 and 24),home_state text not null,home_district text not null,gender text not null check(gender in('male','female','other')),points integer not null default 0 check(points>=0),created_at timestamptz not null default now());
 create unique index if not exists profiles_username_unique on public.profiles(lower(username));
 alter table public.profiles enable row level security;
 create policy "Profiles visible to players" on public.profiles for select to authenticated using(true);
 create policy "Create own profile" on public.profiles for insert to authenticated with check((select auth.uid())=id);
 create policy "Update own profile" on public.profiles for update to authenticated using((select auth.uid())=id) with check((select auth.uid())=id);
+create or replace function public.create_player_profile() returns trigger language plpgsql security definer set search_path=public as $$ begin insert into public.profiles(id,username,name,home_state,home_district,gender) values(new.id,lower(new.raw_user_meta_data->>'username'),new.raw_user_meta_data->>'name',new.raw_user_meta_data->>'home_state',new.raw_user_meta_data->>'home_district',coalesce(new.raw_user_meta_data->>'gender','other')); return new; end; $$;
+drop trigger if exists create_player_after_signup on auth.users;
+create trigger create_player_after_signup after insert on auth.users for each row execute procedure public.create_player_profile();
 create table if not exists public.follow_requests(id uuid primary key default gen_random_uuid(),requester_id uuid not null references public.profiles(id) on delete cascade,target_id uuid not null references public.profiles(id) on delete cascade,status text not null default 'pending' check(status in('pending','accepted','rejected')),created_at timestamptz not null default now(),check(requester_id<>target_id));
 create unique index if not exists one_connection_per_pair on public.follow_requests(least(requester_id,target_id),greatest(requester_id,target_id));
 alter table public.follow_requests enable row level security;

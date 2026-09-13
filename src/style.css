@@ -41,8 +41,18 @@ button {
   display: grid;
   place-items: center;
   padding: 20px;
+  overflow: auto;
   background:
     radial-gradient(circle at 20% 20%, #175840, transparent 52%), #071b18;
+}
+.auth-links {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+.link-button {
+  background: transparent;
+  color: #8de8c1;
 }
 .card {
   width: min(100%, 450px);
